@@ -1,5 +1,6 @@
 package com.muthahar.customer_management.service;
 
+import com.muthahar.customer_management.exception.CustomerNotFoundException;
 import com.muthahar.customer_management.model.Customer;
 import com.muthahar.customer_management.repository.CustomerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,15 +24,15 @@ public class CustomerService {
     }
 
     public Optional<Customer> getCustomerById(UUID id){
-        return repository.findById(id);
+        return Optional.ofNullable(repository.findById(id).orElseThrow(() -> new CustomerNotFoundException("Customer not found with ID: " + id)));
     }
 
     public Optional<Customer> getCustomerByName(String name) {
-        return repository.findByName(name);
+        return Optional.ofNullable(repository.findByName(name).orElseThrow(() -> new CustomerNotFoundException("Customer not found with name: " + name)));
     }
 
     public Optional<Customer> getCustomerByEmail(String email) {
-        return repository.findByEmail(email);
+        return Optional.ofNullable(repository.findByEmail(email).orElseThrow(() -> new CustomerNotFoundException("Customer not found with email: " + email)));
     }
 
     public List<Customer> getAll() {
@@ -39,7 +40,8 @@ public class CustomerService {
     }
 
     public Optional<Customer> updateCustomer(UUID id, Customer customer){
-        return repository.findById(id).map( existing -> {
+        return Optional.ofNullable(repository.findById(id).orElseThrow(() -> new CustomerNotFoundException("Customer not found with ID: " + id)))
+                .map( existing -> {
             existing.setName(customer.getName());
             existing.setEmail((customer.getEmail()));
             existing.setAnnualSpend(customer.getAnnualSpend());
@@ -48,6 +50,9 @@ public class CustomerService {
         });
     }
     public void deleteCustomer(UUID id) {
+        if (!repository.existsById(id)) {
+            throw new CustomerNotFoundException("Customer not found with ID: " + id);
+        }
         repository.deleteById(id);
     }
 
